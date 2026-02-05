@@ -146,6 +146,26 @@ body {
     pointer-events: none;
 }
 
+#rotate-toggle {
+    position: fixed;
+    bottom: 12px;
+    right: 12px;
+    z-index: 20;
+    background: none;
+    border: none;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 11px;
+    opacity: 0.7;
+    cursor: pointer;
+    padding: 0;
+    letter-spacing: 0.3px;
+}
+
+#rotate-toggle:hover {
+    opacity: 1;
+}
+
 @keyframes fadeIn {
     to {
         opacity: 1;
