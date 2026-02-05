@@ -1,0 +1,173 @@
+@font-face {
+    font-family: "WebPlus IBM VGA 8x16";
+    src: url("../fonts/WebPlus_IBM_VGA_8x16.woff") format("woff");
+    font-display: swap;
+}
+
+:root {
+    --bg: #000;
+    --text: #2aff5c;
+    --text-dim: #1a8a4a;
+    --heart: #e53935;
+    --pane-bg: linear-gradient(
+        to bottom,
+        rgba(0, 0, 0, 0.8) 0%,
+        rgba(0, 0, 0, 0.4) 60%,
+        transparent 100%
+    );
+    --map-bg: radial-gradient(circle at center, #111 0%, #000 100%);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family:
+        "WebPlus IBM VGA 8x16", "Noto Sans CJK SC", "Noto Sans CJK JP",
+        "Noto Sans SC", "Noto Sans JP", "PingFang SC", "Hiragino Sans",
+        "Microsoft YaHei", "Meiryo", "Malgun Gothic", "Apple SD Gothic Neo",
+        sans-serif;
+    font-size: 12px;
+    margin: 0;
+    overflow: hidden;
+    height: 100vh;
+    background: var(--bg);
+    color: var(--text);
+    letter-spacing: 0.3px;
+}
+
+#boot {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    color: #ccc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    z-index: 100;
+    opacity: 1;
+    transition: opacity 0.8s ease;
+}
+
+#boot.boot-hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+#layout {
+    position: relative;
+    height: 100vh;
+}
+
+#map-pane {
+    position: absolute;
+    inset: 0;
+    background: var(--map-bg);
+}
+
+#stream-pane {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 30%;
+    height: 100%;
+    padding: 12px;
+    z-index: 10;
+    background: var(--pane-bg);
+    -webkit-mask-image: linear-gradient(to right, black 60%, transparent 100%);
+    mask-image: linear-gradient(to right, black 60%, transparent 100%);
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+}
+
+#stream-pane > * {
+    pointer-events: auto;
+}
+
+#stream-pane.stream-hidden {
+    opacity: 0;
+}
+
+#stream-pane.stream-hidden > * {
+    pointer-events: none;
+}
+
+#canvas-container {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+#stream {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    height: calc(100vh - 24px);
+    justify-content: flex-start;
+    position: relative;
+    font-size: 11px;
+    -webkit-mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+    mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+}
+
+.changeset {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    opacity: 0;
+    animation: fadeIn 1s forwards;
+    transition: all 0.5s ease;
+}
+
+.time-ago {
+    color: var(--text-dim);
+}
+
+.hearts {
+    color: var(--heart);
+    cursor: pointer;
+}
+
+.hearts:hover {
+    scale: 1.2;
+}
+
+#stats {
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    z-index: 20;
+    color: var(--text);
+    font-size: 11px;
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+@keyframes fadeIn {
+    to {
+        opacity: 1;
+    }
+}
+
+@media (max-width: 900px) {
+    #layout {
+        flex-direction: column;
+    }
+
+    #stream-pane,
+    #map-pane {
+        height: 50vh;
+    }
+
+    #canvas-container {
+        position: relative;
+        height: 100%;
+    }
+
+    #stream {
+        height: calc(50vh - 40px);
+    }
+}
