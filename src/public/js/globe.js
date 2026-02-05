@@ -148,7 +148,7 @@ export function initGlobe({ containerId = "canvas-container", onReady } = {}) {
 
   const points = new Map(); // id -> { sprite, data }
   const tagSprites = new Set(); // { obj, ts, base, dir }
-  const maxAgeMs = 10 * 60 * 1000; // 10 minutes
+  const maxAgeMs = 30 * 60 * 1000; // 30 minutes
   const tagMaxAgeMs = 6000;
 
   function focusGlobeOn(lat, lon) {
@@ -319,13 +319,12 @@ export function initGlobe({ containerId = "canvas-container", onReady } = {}) {
       let scale;
       let opacity;
 
-      if (age < 2000) {
-        // Pulse
+      if (age < 450) {
+        // Single pulse
         const burstIn = Math.min(1, age / 120);
         const pulse = (Math.sin(age * 0.014) + 1) / 2;
         scale = (0.05 + pulse * 0.02) * burstIn;
         opacity = burstIn;
-        // p.obj.material.color.setHex(0xffffff);
       } else {
         scale = 0.03 * fade;
         opacity = fade;
@@ -386,5 +385,6 @@ export function initGlobe({ containerId = "canvas-container", onReady } = {}) {
     addTagSprite,
     focusOn: focusGlobeOn,
     isReady: () => globeReady,
+    getControls: () => controls,
   };
 }
