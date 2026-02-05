@@ -1,5 +1,3 @@
-import { db } from "./db";
-
 export interface Changeset {
   id: number;
   user: string;
@@ -36,65 +34,29 @@ export const getRecentChangesets = (limit = 50): Changeset[] => {
     .filter(Boolean) as Changeset[];
 };
 
-const selectHearts = db.prepare("SELECT hearts FROM changesets WHERE id = ?");
-
-const insertChangeset = db.prepare(`
-    INSERT INTO changesets (id, user, location, summary, hearts, processedAt, lat, lon)
-    VALUES (@id, @user, @location, @summary, @hearts, @processedAt, @lat, @lon)
-    ON CONFLICT(id) DO UPDATE SET
-        user=excluded.user,
-        location=excluded.location,
-        summary=excluded.summary,
-        processedAt=excluded.processedAt,
-        lat=excluded.lat,
-        lon=excluded.lon
-`);
-
-const incrementHearts = db.prepare(`
-    UPDATE changesets
-    SET hearts = hearts + 1
-    WHERE id = ?
-`);
-
-const selectById = db.prepare("SELECT * FROM changesets WHERE id = ?");
-
-const insertHeartsOnly = db.prepare(`
-    INSERT INTO changesets (id, hearts)
-    VALUES (?, 1)
-`);
-
 export const addChangeset = (c: Changeset) => {
-  const existing = selectHearts.get(c.id) as { hearts: number } | undefined;
+  const existing = changesetStore.get(c.id);
   const hearts = existing?.hearts ?? c.hearts ?? 0;
   const entry = { ...c, hearts };
-  insertChangeset.run(entry);
   changesetStore.set(c.id, entry);
   touchRecentId(c.id);
 };
 
-const selectActiveMappers = db.prepare(
-  "SELECT COUNT(DISTINCT user) as count FROM changesets WHERE processedAt > ?",
-);
-
 export const getActiveMappers = (): number => {
-  const row = selectActiveMappers.get(Date.now() - 20 * 60 * 1000) as {
-    count: number;
-  };
-  return row.count;
+  const cutoff = Date.now() - 20 * 60 * 1000;
+  const users = new Set<string>();
+  for (const id of recentIds) {
+    const cs = changesetStore.get(id);
+    if (cs && cs.processedAt > cutoff) {
+      users.add(cs.user);
+    }
+  }
+  return users.size;
 };
 
 export const incrementHeart = (id: number) => {
-  const existing = selectById.get(id) as Changeset | undefined;
-  if (!existing) {
-    insertHeartsOnly.run(id);
-    const hearts = 1;
-    const cached = changesetStore.get(id);
-    if (cached) cached.hearts = hearts;
-    return hearts;
-  }
-  incrementHearts.run(id);
-  const hearts = existing.hearts + 1;
-  const cached = changesetStore.get(id);
-  if (cached) cached.hearts = hearts;
-  return hearts;
+  const existing = changesetStore.get(id);
+  if (!existing) return 1;
+  existing.hearts += 1;
+  return existing.hearts;
 };

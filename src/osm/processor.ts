@@ -1,82 +1,52 @@
-import { fetchChangesetDetails } from "./api";
 import { reverseGeocode } from "./geocoder";
 import { addChangeset, Changeset } from "../services/store";
 
 export async function processOsc(oscData: any) {
-  // parser for the changeset metadata
-  const changesetStats = new Map<
-    number,
-    { created: number; modified: number; deleted: number }
-  >();
+  const changesets = oscData?.osm?.changeset;
+  if (!changesets) return [];
 
-  const uniqueChangesets = new Set<number>();
-
-  // closure to capture the changeset details
-  const processBlock = (
-    block: any,
-    actionType: "created" | "modified" | "deleted",
-  ) => {
-    if (!block) return;
-    ["node", "way", "relation"].forEach((type) => {
-      if (block[type]) {
-        block[type].forEach((item: any) => {
-          const cid = parseInt(item.$.changeset);
-          uniqueChangesets.add(cid);
-
-          if (!changesetStats.has(cid)) {
-            changesetStats.set(cid, { created: 0, modified: 0, deleted: 0 });
-          }
-          changesetStats.get(cid)![actionType]++;
-        });
-      }
-    });
-  };
-
-  if (oscData.osmChange) {
-    if (oscData.osmChange.create)
-      processBlock(oscData.osmChange.create[0], "created");
-    if (oscData.osmChange.modify)
-      processBlock(oscData.osmChange.modify[0], "modified");
-    if (oscData.osmChange.delete)
-      processBlock(oscData.osmChange.delete[0], "deleted"); // 'delete' in XML might be <delete>
-  }
-
-  // then process each one
   const results: Changeset[] = [];
-  for (const id of uniqueChangesets) {
-    const details = await fetchChangesetDetails(id);
-    if (!details) continue;
+  for (const cs of changesets) {
+    const attrs = cs.$;
+    const id = parseInt(attrs.id);
+    const user = attrs.user;
 
-    // centroid
-    let lat = 0,
-      lon = 0;
-    if (details.minLat && details.maxLat && details.minLon && details.maxLon) {
-      lat = (details.minLat + details.maxLat) / 2;
-      lon = (details.minLon + details.maxLon) / 2;
-    }
+    const minLat = parseFloat(attrs.min_lat);
+    const maxLat = parseFloat(attrs.max_lat);
+    const minLon = parseFloat(attrs.min_lon);
+    const maxLon = parseFloat(attrs.max_lon);
 
-    // Skip if no bbox (global changes?) or invalid
-    // we could do something here to filter out huge changesets but :shrug:
+    // Skip if no bbox
+    if (isNaN(minLat) || isNaN(maxLat) || isNaN(minLon) || isNaN(maxLon))
+      continue;
+
+    const lat = (minLat + maxLat) / 2;
+    const lon = (minLon + maxLon) / 2;
     if (lat === 0 && lon === 0) continue;
+
+    // Extract comment from tags
+    let comment = "";
+    if (cs.tag) {
+      const commentTag = cs.tag.find((t: any) => t.$.k === "comment");
+      if (commentTag) comment = commentTag.$.v;
+    }
 
     const location = await reverseGeocode(lat, lon);
 
-    const summaryText = details.tags["comment"] || "";
-
     const changeset: Changeset = {
-      id: id,
-      user: details.user,
-      location: location,
-      summary: summaryText,
+      id,
+      user,
+      location,
+      summary: comment,
       hearts: 0,
-      processedAt: details.closedAt,
-      lat: lat,
-      lon: lon,
+      processedAt: Date.now(),
+      lat,
+      lon,
     };
 
     addChangeset(changeset);
     results.push(changeset);
-    console.log(`Processed changeset ${id}: ${location} - ${summaryText}`);
+    console.log(`Processed changeset ${id}: ${location} - ${comment}`);
   }
 
   return results;

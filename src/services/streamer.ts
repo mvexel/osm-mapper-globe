@@ -1,20 +1,16 @@
 import { EventEmitter } from "events";
 import { Changeset } from "./store";
 
+const SPREAD_MS = 60 * 1000; // spread each batch over one minute
+
 class Streamer extends EventEmitter {
-  enqueue(changesets: Changeset[], options?: { speedFactor?: number }) {
+  enqueue(changesets: Changeset[]) {
     if (changesets.length === 0) return;
 
-    const shuffled = [...changesets].sort(() => Math.random() - 0.5);
-
-    const speedFactor = Math.max(0.1, options?.speedFactor ?? 1);
-    const duration = 55 * 1000 * speedFactor; // 55 seconds target
-    const interval = duration / shuffled.length;
-
-    shuffled.forEach((cs, index) => {
-      const delay = index * interval + Math.random() * (interval * 0.5); // interval + jitter
+    changesets.forEach((cs) => {
+      const delay = Math.random() * SPREAD_MS;
       setTimeout(() => {
-        this.emit("changeset", cs);
+        this.emit("changeset", { ...cs, processedAt: Date.now() });
       }, delay);
     });
   }

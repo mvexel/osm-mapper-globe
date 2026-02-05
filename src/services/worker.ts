@@ -1,8 +1,4 @@
-import {
-  fetchCurrentState,
-  fetchAndParseDiff,
-  ReplicationState,
-} from "../osm/replication";
+import { fetchCurrentState, fetchAndParseDiff } from "../osm/replication";
 import { processOsc } from "../osm/processor";
 import { streamer } from "./streamer";
 
@@ -10,13 +6,11 @@ export class Worker {
   private isRunning = false;
   private lastSequenceNumber = 0;
   private knownSequenceNumber = 0;
-  private startedAt = 0;
 
   // start the  worker
   async start() {
     if (this.isRunning) return;
     this.isRunning = true;
-    this.startedAt = Date.now();
 
     console.log("Worker started.");
 
@@ -44,8 +38,8 @@ export class Worker {
     try {
       const nextSeq = this.lastSequenceNumber + 1;
 
-      // If we've caught up to the last known state, refresh state.txt
-      // before attempting a diff fetch — avoids 404s entirely.
+      // If we've caught up to the last known state, refresh state
+      // before attempting a fetch — avoids 404s entirely.
       if (nextSeq > this.knownSequenceNumber) {
         const state = await fetchCurrentState();
         this.knownSequenceNumber = state.sequenceNumber;
@@ -64,10 +58,7 @@ export class Worker {
         const changesets = await processOsc(diff);
         console.log(`Extracted ${changesets.length} changesets`);
 
-        const boostDurationMs = 3 * 60 * 1000;
-        const speedFactor =
-          Date.now() - this.startedAt < boostDurationMs ? 0.25 : 1;
-        streamer.enqueue(changesets, { speedFactor });
+        streamer.enqueue(changesets);
         this.lastSequenceNumber = nextSeq;
       }
     } catch (error) {

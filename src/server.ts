@@ -93,7 +93,8 @@ server.post("/thank/:id", async (request, reply) => {
 
 const start = async () => {
   try {
-    const address = await server.listen({ port: 3000, host: "127.0.0.1" });
+    const port = parseInt(process.env.PORT || "3000", 10);
+    const address = await server.listen({ port, host: "0.0.0.0" });
     console.log(`Server listening on ${address}`);
     worker.start();
   } catch (err) {
