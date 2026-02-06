@@ -77,3 +77,18 @@ rotateBtn.addEventListener("click", () => {
   controls.autoRotate = !controls.autoRotate;
   rotateBtn.textContent = controls.autoRotate ? "[~]" : "[||]";
 });
+
+const audioBtn = document.getElementById("audio-toggle");
+const ambientAudio = document.getElementById("ambient-audio");
+let audioPlaying = false;
+
+audioBtn.addEventListener("click", () => {
+  if (audioPlaying) {
+    ambientAudio.pause();
+    audioBtn.textContent = "[♪]";
+  } else {
+    ambientAudio.play();
+    audioBtn.textContent = "[♫]";
+  }
+  audioPlaying = !audioPlaying;
+});
