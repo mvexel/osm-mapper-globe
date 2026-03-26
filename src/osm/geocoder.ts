@@ -12,34 +12,35 @@ export async function reverseGeocode(
     return geoCache.get(key)!;
   }
 
-  try {
-    // call nominatim for rev geo
-    const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&zoom=10`;
-    const response = await axios.get(url, {
-      headers: {
-        // Heathcliff, it's me, I'm Martijn
-        "User-Agent": "ThankAMapper/1.0 (m@rtijn.org)",
-      },
-    });
+  // try {
+  //   // call nominatim for rev geo
+  //   const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&zoom=10`;
+  //   const response = await axios.get(url, {
+  //     headers: {
+  //       // Heathcliff, it's me, I'm Martijn
+  //       "User-Agent": "ThankAMapper/1.0 (m@rtijn.org)",
+  //     },
+  //   });
 
-    const address = response.data.address;
-    let location = "Unknown Location";
+  //   const address = response.data.address;
+  //   let location = "Unknown Location";
 
-    if (address) {
-      const city =
-        address.city || address.town || address.village || address.county;
-      const country = address.country;
-      if (city && country) {
-        location = `${city}, ${country}`;
-      } else if (country) {
-        location = `${country}`;
-      }
-    }
+  //   if (address) {
+  //     const city =
+  //       address.city || address.town || address.village || address.county;
+  //     const country = address.country;
+  //     if (city && country) {
+  //       location = `${city}, ${country}`;
+  //     } else if (country) {
+  //       location = `${country}`;
+  //     }
+  //   }
 
-    geoCache.set(key, location);
-    return location;
-  } catch (error) {
-    console.error("Geocoding error:", error);
-    return "Unknown Location";
-  }
+  //   geoCache.set(key, location);
+  //   return location;
+  // } catch (error) {
+  //   console.error("Geocoding error:", error);
+  //   return "Unknown Location";
+  // }
+  return `${lon}, ${lat}`;
 }
