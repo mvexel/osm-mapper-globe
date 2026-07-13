@@ -1,0 +1,28 @@
+name: osm-mapper-globe
+
+networks:
+  ingress:
+    name: schaaltreinenhuis-ingress
+    external: true
+
+services:
+  globe:
+    image: ${IMAGE_PREFIX:-ghcr.io/mvexel/osm-mapper-globe}:latest
+    build:
+      context: .
+    pull_policy: ${IMAGE_PULL_POLICY:-always}
+    restart: unless-stopped
+    environment:
+      PORT: "3000"
+    expose:
+      - "3000"
+    networks:
+      default:
+      ingress:
+        aliases:
+          - osm-mapper-globe
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3000/', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
